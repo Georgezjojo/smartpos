@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SmartPOS - Intelligent Point of Sale & Business Intelligence System">
+  <meta name="theme-color" content="#6C5CE7">
+  <title>SmartPOS – Business Intelligence System</title>
+
+  <!-- Favicon (using emoji as a quick placeholder; replace with real icon) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>">
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Chart.js for reports (loaded early) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="light-mode">
+  <div id="app">
+    <header id="header"></header>
+    <aside id="sidebar"></aside>
+    <main id="main-content"></main>
+  </div>
+  <div id="toast-container"></div>
+  <div id="modal-overlay" class="hidden"></div>
+  <footer class="app-footer" id="app-footer">
+    <div class="footer-content">
+      <div class="footer-brand"><i class="fas fa-store-alt"></i> SmartPOS</div>
+      <div class="footer-links">
+        <a href="#/terms">Terms of Service</a>
+        <a href="#/privacy">Privacy Policy</a>
+        <a href="#/contact">Contact</a>
+      </div>
+      <div class="footer-copy">&copy; 2026 SmartPOS. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <!-- External libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <!-- Dexie (offline database) -->
+  <script src="https://unpkg.com/dexie@3.2.3/dist/dexie.js"></script>
+
+  <!-- Core app scripts -->
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/components.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/pos.js"></script>
+  <script src="assets/js/dashboard.js"></script>
+  <script src="assets/js/inventory.js"></script>
+  <script src="assets/js/transfers.js"></script>
+  <script src="assets/js/reports.js"></script>
+  <script src="assets/js/expenses.js"></script>
+  <script src="assets/js/users.js"></script>
+  <script src="assets/js/notifications.js"></script>
+  <script src="assets/js/settings.js"></script>
+  <script src="assets/js/ai.js"></script>
+  <script src="assets/js/contact.js"></script>
+
+  <!-- Offline database module -->
+  <script src="offline/db.js"></script>
+
+  <script src="assets/js/cleanup.js"></script>
+  <script src="assets/js/router.js"></script>
+  <script src="assets/js/app.js"></script>
+
+  <!-- Register Service Worker for offline caching -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/offline/service-worker.js')
+          .then(reg => console.log('SW registered', reg.scope))
+          .catch(err => console.log('SW registration failed', err));
+      });
+    }
+  </script>
+</body>
+</html>

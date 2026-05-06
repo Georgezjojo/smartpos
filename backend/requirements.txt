@@ -1,0 +1,17 @@
+Django==4.2
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.2.2
+django-cors-headers==3.14.0
+django-filter==23.1
+drf-yasg==1.21.7
+celery==5.3.1
+redis==4.5.5
+channels==4.0.0
+channels-redis==4.1.0
+daphne==4.0.0
+PyMySQL==1.1.0
+Pillow>=9.5.0
+django-ratelimit==4.1.0
+python-dotenv==1.0.0
+requests==2.31.0
+dj-database-url==2.1.0
