@@ -1,2 +1,5 @@
-/api/*  https://smartpos-backend.up.railway.app/api/:splat  200
+# Proxy all API calls to the Railway backend (must be first!)
+/api/*  https://backend-production-3b2c.up.railway.app/api/:splat  200
+
+# SPA fallback – everything else goes to index.html
 /*      /index.html                                         200
