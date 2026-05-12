@@ -11,7 +11,7 @@ class MpesaTransaction(models.Model):
         USED = 'Used', 'Used'          # when the operator confirms it for a sale
 
     business = models.ForeignKey(
-        'business.Business', on_delete=models.CASCADE, related_name='mpesa_transactions'
+        'businesses.Business', on_delete=models.CASCADE, related_name='mpesa_transactions'
     )
     phone = models.CharField(max_length=15)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
