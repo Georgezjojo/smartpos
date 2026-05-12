@@ -160,15 +160,21 @@ CACHES = {
 }
 
 # ====================== EMAIL ======================
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = 'SmartPOS <noreply@smartpos.com>'
-ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@smartpos.com')
-DEVELOPER_EMAIL = os.environ.get('DEVELOPER_EMAIL', 'developer@example.com')
+ANYMAIL = {
+    "RESEND_API_KEY": os.environ.get("RESEND_API_KEY", ""),
+}
+EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
+DEFAULT_FROM_EMAIL = os.environ.get("FROM_EMAIL", "noreply@smartpos.com")
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@smartpos.com")
+DEVELOPER_EMAIL = os.environ.get("DEVELOPER_EMAIL", "developer@example.com")
+
+# Disable old SMTP settings
+EMAIL_HOST = None
+EMAIL_PORT = None
+EMAIL_HOST_USER = None
+EMAIL_HOST_PASSWORD = None
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = False
 
 # ====================== SMS (Africa's Talking) ======================
 AFRICASTALKING_USERNAME = os.environ.get('AT_USERNAME', 'sandbox')
