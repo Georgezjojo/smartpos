@@ -97,7 +97,7 @@ document.addEventListener('click', function(e) {
   }
 });
 
-/* ========== SIDEBAR ========== */
+/* ========== SIDEBAR (updated with Customers link) ========== */
 function renderSidebar() {
   const sidebar = document.getElementById('sidebar');
   sidebar.innerHTML = `
@@ -109,6 +109,7 @@ function renderSidebar() {
       <a href="#/reports" class="nav-item"><i class="fas fa-file-invoice"></i> Reports</a>
       <a href="#/expenses" class="nav-item"><i class="fas fa-receipt"></i> Expenses</a>
       <a href="#/users" class="nav-item admin-only"><i class="fas fa-users"></i> Users</a>
+      <a href="#/customers" class="nav-item"><i class="fas fa-users"></i> Customers</a>   <!-- NEW -->
       <a href="#/ai" class="nav-item"><i class="fas fa-robot"></i> AI Assistant</a>
       <a href="#/notifications" class="nav-item"><i class="fas fa-bell"></i> Notifications</a>
       <a href="#/profile" class="nav-item"><i class="fas fa-user-circle"></i> Profile</a>
