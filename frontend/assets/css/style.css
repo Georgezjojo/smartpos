@@ -429,11 +429,12 @@ body.public-page .app-footer { margin-left: 0; }
     width: 100%;
   }
 
-  /* Header adjust */
+  /* Header adjustments */
   #header {
-    padding: 0 15px;
+    padding: 0 10px;
     flex-wrap: nowrap;
     justify-content: space-between;
+    height: 60px;
   }
 
   /* Hide the menu toggle in header because we have the floating button */
@@ -446,41 +447,56 @@ body.public-page .app-footer { margin-left: 0; }
     margin-left: 0;
   }
 
-  /* Logo stays small */
-  .logo-text {
+  /* Logo smaller */
+  .header-logo .logo-text {
     font-size: 1.2rem;
   }
+  .header-logo i {
+    font-size: 1.5rem !important;
+  }
 
-  /* Hide global search on very small screens to save space (still accessible via floating search button if we had one, but we keep it on a new line if needed) */
+  /* Hide global search completely on small screens to save space */
   .header-center {
-    display: none;   /* hide the search bar on mobile header – you can still search from the global search in sidebar/dashboard if you want, but to keep header clean */
+    display: none;
   }
 
-  /* Compact header right buttons */
+  /* Header right buttons – only icons, no text */
   .header-right {
-    gap: 8px;
+    gap: 6px;
   }
 
-  /* Hide button text, show only icons */
   .btn-text {
     display: none;
   }
 
-  .btn-sm {
-    padding: 6px 10px;
+  .header-right .btn-sm {
+    padding: 6px 8px;
     font-size: 0.9rem;
+    min-width: unset;
+    box-shadow: none;
   }
 
   .theme-toggle {
     font-size: 1.2rem;
+    padding: 0;
   }
 
   .notification-bell {
     font-size: 1rem;
+    padding: 0 4px;
   }
 
   .user-menu {
-    padding: 4px 8px;
+    padding: 4px 6px;
+    margin-left: 2px;
+  }
+  .user-menu i {
+    font-size: 0.9rem;
+  }
+  .avatar-sm {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem !important;
   }
 
   /* Footer full width */
@@ -495,6 +511,7 @@ body.public-page .app-footer { margin-left: 0; }
   .footer-links {
     flex-direction: column;
     gap: 10px;
+    align-items: center;
   }
 
   /* General grid fallbacks */
@@ -565,6 +582,17 @@ body.public-page .app-footer { margin-left: 0; }
   /* Show search bar on tablet */
   .header-center {
     display: flex;
+    flex: 1;
+  }
+  .global-search-wrapper {
+    max-width: 300px;
+  }
+  .header-right .btn-sm {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+  .btn-text {
+    display: inline;
   }
 }
 
