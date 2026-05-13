@@ -15,13 +15,9 @@ let pendingSale = null;
 let pendingPaymentInterval = null;
 
 function formatMpesaPhone(phone) {
-  // Remove any spaces or dashes
   let cleaned = phone.replace(/[^0-9]/g, '');
-  // Convert "07XXXXXXXX" -> "2547XXXXXXXX"
   if (cleaned.startsWith('0')) cleaned = '254' + cleaned.slice(1);
-  // Convert "7XXXXXXXX" -> "2547XXXXXXXX"
   else if (cleaned.startsWith('7')) cleaned = '254' + cleaned;
-  // Convert "1XXXXXXXX" -> "2541XXXXXXXX"
   else if (cleaned.startsWith('1')) cleaned = '254' + cleaned;
   return cleaned;
 }
@@ -328,7 +324,7 @@ function updateCartDisplay() { updateCart(); }
 
 // ========== ORANGE PAYMENT OVERLAY (full screen) ==========
 function showPaymentOverlay(innerHtml) {
-  removePaymentOverlay(); // ensure no duplicates
+  removePaymentOverlay();
   const overlay = document.createElement('div');
   overlay.id = 'pos-payment-overlay';
   overlay.style.cssText = `
@@ -381,10 +377,8 @@ async function processSale() {
   pendingSale = { saleData, total, discount: discountValue, tax: taxAmount, subtotal, cartContents: [...cart] };
 
   if (paymentMethod === 'cash') {
-    // Cash: instant finalise
     await finalizeSale(saleData);
   } else if (paymentMethod === 'mpesa' || paymentMethod === 'card') {
-    // Build the beautiful orange overlay
     const overlayHtml = `
       <div style="padding: 20px; font-family: 'Segoe UI', sans-serif;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -432,7 +426,6 @@ async function sendSTKPush() {
   const phoneInput = document.getElementById('mpesa-phone').value.trim();
   if (!phoneInput) { showToast('Please enter the customer phone number', 'error'); return; }
 
-  // Convert local format to international
   const phone = formatMpesaPhone(phoneInput);
   if (!phone.startsWith('254')) {
     showToast('Invalid phone number. Please use 07... or 01... format.', 'error');
@@ -479,7 +472,6 @@ function startPaymentPolling(checkoutRequestId) {
 // ---------- Manual confirmation inside overlay ----------
 function showManualConfirmInOverlay() {
   if (!pendingSale) return;
-  // Replace card content with recent payments view
   const overlay = document.getElementById('pos-payment-overlay');
   if (!overlay) return;
   const card = overlay.querySelector('div');
@@ -540,7 +532,6 @@ async function markAsPaidManually() {
   await finalizeSale(pendingSale.saleData);
 }
 
-// Helper to go back to main M-Pesa form after viewing recent payments
 function showMPesaMainOverlay() {
   if (!pendingSale) return;
   const overlayHtml = `
@@ -575,11 +566,9 @@ function showMPesaMainOverlay() {
   }
 }
 
-// ---------- API stubs (same as before) ----------
+// ---------- API stubs ----------
 async function initiateMpesaSTK(phone, amount, reference) {
-  const res = await api.post('/payments/mpesa/stkpush/', {
-    phone, amount, account_reference: reference
-  });
+  const res = await api.post('/payments/mpesa/stkpush/', { phone, amount, account_reference: reference });
   return res.data;
 }
 async function checkMpesaStatus(checkoutRequestId) {
@@ -653,17 +642,13 @@ async function getBusinessAndCashierInfo() {
 
 // ---------- Reprint & receipt ----------
 function reprintLastReceipt() {
-  if (!lastReceiptData) {
-    showToast('No receipt to print.', 'info');
-    return;
-  }
+  if (!lastReceiptData) { showToast('No receipt to print.', 'info'); return; }
   printReceipt(lastReceiptData);
 }
 
 function printReceipt(data) {
   const { items, total, discount, tax, subtotal, paymentMethod: pm, businessInfo, customerName, date } = data;
   const paymentMethodLabel = { cash: '💵 Cash', card: '💳 Card', mpesa: '📱 M‑Pesa' }[pm] || pm;
-
   const receiptHTML = `
     <div style="font-family: 'Courier New', monospace; width: 80mm; margin:0 auto; padding:10px; font-size:11px; color:#000;">
       <div style="text-align:center; margin-bottom:8px;">
@@ -705,7 +690,6 @@ function printReceipt(data) {
         <p style="margin:0;">Powered by SmartPOS</p>
       </div>
     </div>`;
-
   const w = window.open('', '', 'width=400,height=600');
   w.document.write(`<html><head><title>Receipt</title></head><body>${receiptHTML}</body></html>`);
   w.document.close();

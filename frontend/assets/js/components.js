@@ -109,7 +109,7 @@ function renderSidebar() {
       <a href="#/reports" class="nav-item"><i class="fas fa-file-invoice"></i> Reports</a>
       <a href="#/expenses" class="nav-item"><i class="fas fa-receipt"></i> Expenses</a>
       <a href="#/users" class="nav-item admin-only"><i class="fas fa-users"></i> Users</a>
-      <a href="#/customers" class="nav-item"><i class="fas fa-users"></i> Customers</a>   <!-- NEW -->
+      <a href="#/customers" class="nav-item"><i class="fas fa-users"></i> Customers</a>
       <a href="#/ai" class="nav-item"><i class="fas fa-robot"></i> AI Assistant</a>
       <a href="#/notifications" class="nav-item"><i class="fas fa-bell"></i> Notifications</a>
       <a href="#/profile" class="nav-item"><i class="fas fa-user-circle"></i> Profile</a>
@@ -263,7 +263,7 @@ async function performGlobalSearch() {
     }
     if (data.customers?.length) {
       html += '<div class="search-section-title"><i class="fas fa-user"></i> Customers</div>';
-      data.customers.forEach(c => html += `<div class="search-item" onclick="window.location.hash='#/inventory'">👤 ${c.name} – ${c.phone || ''}</div>`);
+      data.customers.forEach(c => html += `<div class="search-item" onclick="window.location.hash='#/customers'">👤 ${c.name} – ${c.phone || ''}</div>`);
     }
     if (!html) html = '<div class="search-item text-center">No results found</div>';
     dropdown.innerHTML = html;

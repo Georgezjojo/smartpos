@@ -407,9 +407,12 @@ body.public-page .app-footer { margin-left: 0; }
 }
 
 @media (max-width: 768px) {
-  /* Show hamburger */
+  /* Show hamburger – now on the right */
   .sidebar-toggle-btn {
     display: flex;
+    top: 10px;
+    right: 10px;
+    left: auto;
   }
 
   /* Sidebar off‑canvas */
@@ -528,12 +531,39 @@ body.public-page .app-footer { margin-left: 0; }
   .user-grid {
     grid-template-columns: 1fr;
   }
+
+  /* POS horizontal scroll */
   .pos-container-new {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
     height: auto;
+    gap: 0;
   }
+  .pos-left-new,
+  .pos-right-new {
+    min-width: 100vw;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+
   .product-grid-new {
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  }
+
+  /* POS search full width */
+  .pos-search-wrapper {
+    max-width: 100% !important;
+    width: 100%;
+  }
+  #pos-search {
+    font-size: 1rem;
+    padding: 12px;
+  }
+  .product-list-compact {
+    font-size: 0.9rem;
   }
 
   /* Cards and modals */
@@ -558,9 +588,20 @@ body.public-page .app-footer { margin-left: 0; }
     margin-bottom: 5px;
   }
 
-  /* POS right panel adjustments */
   .pos-right-new {
     max-height: none;
+  }
+
+  /* Search dropdown overlay */
+  .search-dropdown {
+    z-index: 1100;
+    max-height: 70vh;
+    overflow-y: auto;
+    position: fixed;
+    top: 60px;
+    left: 10px;
+    right: 10px;
+    width: auto;
   }
 }
 
