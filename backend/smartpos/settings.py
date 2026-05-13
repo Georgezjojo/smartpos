@@ -199,8 +199,10 @@ RATELIMIT_USE_CACHE = 'default'
 # On Render/Railway these are fine (HTTPS is forced).
 # For local development (HTTP) you can disable them by setting
 # SECURE_COOKIES=False in your .env file.
-SECURE_COOKIES = os.environ.get('SECURE_COOKIES', 'True') == 'True'
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_TRUSTED_ORIGINS = ['https://backend-production-3b2c.up.railway.app']
 
+SECURE_COOKIES = os.environ.get('SECURE_COOKIES', 'True') == 'True'
 SESSION_COOKIE_SECURE = SECURE_COOKIES
 CSRF_COOKIE_SECURE = SECURE_COOKIES
 SECURE_BROWSER_XSS_FILTER = True
