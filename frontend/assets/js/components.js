@@ -17,8 +17,8 @@ function renderHeader() {
       <div class="global-search-wrapper">
         <input type="text" id="global-search" class="input-field" placeholder="Search products, sales, customers...">
         <button class="btn btn-primary search-btn" onclick="performGlobalSearch()" style="background: white; color: #FF8C00; border-radius:0 8px 8px 0; margin:0; padding:0 20px;">
-  <i class="fas fa-search"></i>
-</button>
+          <i class="fas fa-search"></i>
+        </button>
       </div>
       <div id="search-results" class="search-dropdown hidden"></div>
     </div>
@@ -117,10 +117,62 @@ function renderSidebar() {
       <a href="#" onclick="logout()" class="nav-item"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </nav>
   `;
+
+  // Close sidebar on mobile after any nav link click
+  sidebar.querySelectorAll('.nav-item').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        closeSidebar();
+      }
+    });
+  });
 }
 
+/* ---------- Sidebar toggling ---------- */
 function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+  const isOpen = sidebar.classList.toggle('open');
+  if (isOpen) {
+    showSidebarBackdrop();
+  } else {
+    removeSidebarBackdrop();
+  }
+}
+
+function closeSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) sidebar.classList.remove('open');
+  removeSidebarBackdrop();
+}
+
+/* ---------- Sidebar backdrop for mobile ---------- */
+function createSidebarBackdrop() {
+  let backdrop = document.getElementById('sidebar-backdrop');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.id = 'sidebar-backdrop';
+    backdrop.style.cssText = `
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 998;
+      display: none;
+    `;
+    backdrop.addEventListener('click', closeSidebar);
+    document.body.appendChild(backdrop);
+  }
+  return backdrop;
+}
+
+function showSidebarBackdrop() {
+  const backdrop = createSidebarBackdrop();
+  backdrop.style.display = 'block';
+}
+
+function removeSidebarBackdrop() {
+  const backdrop = document.getElementById('sidebar-backdrop');
+  if (backdrop) backdrop.style.display = 'none';
 }
 
 /* ========== THEME ========== */
@@ -225,3 +277,11 @@ function logout() {
   localStorage.clear();
   window.location.hash = '#/login';
 }
+
+/* ---------- Bind mobile toggle button (exists in index.html) ---------- */
+document.addEventListener('DOMContentLoaded', () => {
+  const mobileToggleBtn = document.getElementById('sidebar-toggle');
+  if (mobileToggleBtn) {
+    mobileToggleBtn.addEventListener('click', toggleSidebar);
+  }
+});

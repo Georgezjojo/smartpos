@@ -382,20 +382,144 @@ body.public-page .app-footer { margin-left: 0; }
 .footer-links a:hover { color: var(--primary); }
 .footer-copy { color: #718096; font-size: 0.9rem; }
 
-/* ========== Responsive ========== */
+/* ========== RESPONSIVE (Mobile & Tablet) ========== */
+/* Mobile sidebar toggle button */
+.sidebar-toggle-btn {
+  display: none;
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 1100;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  align-items: center;
+  justify-content: center;
+}
+.dark-mode .sidebar-toggle-btn {
+  background: var(--primary-dark);
+}
+
 @media (max-width: 768px) {
+  /* Show hamburger */
+  .sidebar-toggle-btn {
+    display: flex;
+  }
+
+  /* Sidebar off‑canvas */
   #sidebar {
     transform: translateX(-100%);
+    z-index: 1050;
+    box-shadow: var(--shadow-lg);
   }
   #sidebar.open {
     transform: translateX(0);
   }
+
+  /* Main content no left margin */
   #main-content {
     margin-left: 0;
+    padding: 20px;
+    width: 100%;
   }
-  .menu-toggle { display: block; }
-  .app-footer { margin-left: 0; padding: 20px; }
-  .footer-content { flex-direction: column; text-align: center; }
+
+  /* Header adjust */
+  #header {
+    padding: 0 15px;
+    justify-content: center;
+  }
+  .header-left {
+    flex: unset;
+    margin-left: 0;
+  }
+  .global-search-wrapper {
+    max-width: 200px;
+  }
+  .header-right .user-name {
+    display: none;
+  }
+
+  /* Footer full width */
+  .app-footer {
+    margin-left: 0;
+    padding: 20px;
+  }
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  /* General grid fallbacks */
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .report-grid {
+    grid-template-columns: 1fr;
+  }
+  .product-grid-inv {
+    grid-template-columns: 1fr;
+  }
+  .user-grid {
+    grid-template-columns: 1fr;
+  }
+  .pos-container-new {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .product-grid-new {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  }
+
+  /* Cards and modals */
+  .card {
+    padding: 20px;
+  }
+  .modal-content {
+    padding: 24px;
+    margin: 20px;
+  }
+
+  /* Buttons full width on mobile */
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .payment-methods-new .flex {
+    flex-direction: column;
+  }
+  .btn-payment-new {
+    width: 100%;
+    margin-bottom: 5px;
+  }
+
+  /* POS right panel adjustments */
+  .pos-right-new {
+    max-height: none;
+  }
+}
+
+/* Tablet adjustments (slightly larger screens) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  #sidebar {
+    width: 220px;
+  }
+  #main-content {
+    margin-left: 220px;
+    padding: 25px;
+  }
+  .app-footer {
+    margin-left: 220px;
+  }
+  .product-grid-inv {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
 }
 
 /* ========== Utilities ========== */
@@ -526,7 +650,7 @@ body.public-page .app-footer { margin-left: 0; }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;          /* was 1.8rem */
+  font-size: 1.5rem;
   cursor: pointer;
   box-shadow: 0 8px 25px rgba(255,92,92,0.4);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -684,9 +808,6 @@ body.public-page #ai-floating-bubble {
   border-radius: 10px;
   margin-left: 6px;
   font-weight: 600;
-}
-@media (max-width: 768px) {
-  .pos-container-new { grid-template-columns: 1fr; height: auto; }
 }
 
 /* ========== Dashboard ========== */
@@ -944,15 +1065,15 @@ body.public-page #ai-floating-bubble {
 
 /* Ensure all modals scroll properly */
 #modal-overlay {
-  overflow-y: auto;               /* allows scrolling when content is taller than the screen */
-  align-items: flex-start;        /* start from the top, not centred */
-  padding: 40px 20px;             /* space around the modal */
+  overflow-y: auto;
+  align-items: flex-start;
+  padding: 40px 20px;
 }
 
 .modal-content {
-  max-height: 85vh;               /* never exceed 85% of viewport height */
-  overflow-y: auto;               /* scroll inside the modal if needed */
-  margin: auto;                   /* keep it centred horizontally */
+  max-height: 85vh;
+  overflow-y: auto;
+  margin: auto;
 }
 
 .report-modal-content {
@@ -969,22 +1090,9 @@ body.public-page #ai-floating-bubble {
   background: #1E1F2E;
 }
 
-/* Ensure all modals scroll properly */
-#modal-overlay {
-  overflow-y: auto;               /* allows scrolling when content taller than screen */
-  align-items: flex-start;        /* start the modal from the top, not centered */
-  padding: 40px 20px;             /* space around the modal */
-}
-
-.modal-content {
-  max-height: 85vh;               /* never exceed 85% of viewport height */
-  overflow-y: auto;               /* scroll inside the modal if needed */
-  margin: auto;                   /* keep it centred horizontally */
-}
-
 /* POS inside main-content */
 .pos-container-new {
-  height: calc(100vh - 130px);   /* already fine with header + main-content padding */
+  height: calc(100vh - 130px);
 }
 
 .transfer-card {

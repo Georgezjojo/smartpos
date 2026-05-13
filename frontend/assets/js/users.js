@@ -2,13 +2,19 @@
 async function renderUsers() {
   document.getElementById('main-content').innerHTML = `
     <div class="card" style="background: linear-gradient(135deg, #FF8C00, #FF5E7E); color: white; margin-bottom: 20px;">
-      <div class="flex-between">
+      <div class="flex-between" style="flex-wrap:wrap; gap:10px;">
         <h2><i class="fas fa-users-cog"></i> User Management</h2>
         <button class="btn btn-sm" id="add-user-btn" onclick="showAddUserModal()" style="background: white; color: #FF5E7E; display:none;">
           <i class="fas fa-user-plus"></i> Add User
         </button>
       </div>
       <p id="user-page-desc" style="opacity:0.9;">Loading…</p>
+      <div style="margin-top:15px; position:relative;">
+        <input type="text" id="user-search" class="input-field" 
+               placeholder="🔍 Search users..." 
+               oninput="filterUsers()" 
+               style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; width:100%;">
+      </div>
     </div>
     <div id="user-list" class="user-grid"></div>
   `;
@@ -28,6 +34,7 @@ async function renderUsers() {
   } catch(e) {}
 }
 
+// ---------- Load all users ----------
 async function loadUsers() {
   try {
     const res = await api.get('/auth/users/');
@@ -35,17 +42,19 @@ async function loadUsers() {
     const users = res.data.results || [];
 
     if (users.length === 0) {
-      list.innerHTML = '<div class="card text-center">No users found.</div>';
+      list.innerHTML = '<div class="card text-center"><i class="fas fa-users-slash" style="font-size:2rem; color:#718096;"></i><p>No users found.</p></div>';
       return;
     }
 
     list.innerHTML = users.map(u => {
       const roleColor = u.role === 'owner' ? '#FF8C00' : (u.role === 'manager' ? '#38A169' : '#3182CE');
       const roleIcon = u.role === 'owner' ? '👑' : (u.role === 'manager' ? '🔧' : '💼');
+      // Build a searchable data string for filtering
+      const searchData = `${u.full_name} ${u.email || ''} ${u.phone || ''} ${u.role} ${u.branch_name || ''}`.toLowerCase();
       return `
-        <div class="user-card" style="border-left: 5px solid ${roleColor};">
+        <div class="user-card" data-search="${searchData}" style="border-left: 5px solid ${roleColor};">
           <div class="user-card-body">
-            <div class="flex-between">
+            <div class="flex-between" style="flex-wrap:wrap; gap:10px;">
               <div>
                 <h4 style="margin:0;">${u.full_name}</h4>
                 <small style="color:#718096;">${u.email || u.phone || 'No contact'}</small>
@@ -71,6 +80,15 @@ async function loadUsers() {
   }
 }
 
+// ---------- Search / Filter users ----------
+function filterUsers() {
+  const query = document.getElementById('user-search')?.value.toLowerCase() || '';
+  document.querySelectorAll('.user-card').forEach(card => {
+    const searchData = card.dataset.search || '';
+    card.style.display = searchData.includes(query) ? '' : 'none';
+  });
+}
+
 // ---- ADD USER MODAL ----
 async function showAddUserModal() {
   let branchOptions = '<option value="">-- Main Branch (none) --</option>';
@@ -88,15 +106,19 @@ async function showAddUserModal() {
       <p style="color:#718096; font-size:0.9rem;">The manager will be automatically assigned based on the selected branch.</p>
       <form id="add-user-form">
         <div class="form-group">
-          <input type="text" id="user-fullname" class="input-field" placeholder="Full Name *" required>
+          <label>Full Name *</label>
+          <input type="text" id="user-fullname" class="input-field" placeholder="Full Name" required>
         </div>
         <div class="form-group">
+          <label>Email</label>
           <input type="email" id="user-email" class="input-field" placeholder="Email (optional)">
         </div>
         <div class="form-group">
+          <label>Phone</label>
           <input type="text" id="user-phone" class="input-field" placeholder="Phone (optional)">
         </div>
         <div class="form-group">
+          <label>Role *</label>
           <select id="user-role" class="input-field" required>
             <option value="">-- Select Role --</option>
             <option value="cashier">Cashier / Accountant</option>
@@ -104,12 +126,14 @@ async function showAddUserModal() {
           </select>
         </div>
         <div class="form-group">
+          <label>Branch</label>
           <select id="user-branch" class="input-field">
             ${branchOptions}
           </select>
         </div>
         <div class="form-group">
-          <input type="password" id="user-password" class="input-field" placeholder="Password *" required>
+          <label>Password *</label>
+          <input type="password" id="user-password" class="input-field" placeholder="Password" required>
         </div>
         <button type="submit" class="btn btn-primary w-full" style="background:#FF8C00;">Create User</button>
       </form>
@@ -118,14 +142,19 @@ async function showAddUserModal() {
   document.getElementById('add-user-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = {
-      full_name: document.getElementById('user-fullname').value,
-      email: document.getElementById('user-email').value,
-      phone: document.getElementById('user-phone').value,
+      full_name: document.getElementById('user-fullname').value.trim(),
+      email: document.getElementById('user-email').value.trim(),
+      phone: document.getElementById('user-phone').value.trim(),
       role: document.getElementById('user-role').value,
       password: document.getElementById('user-password').value,
     };
     const branchId = document.getElementById('user-branch').value;
     if (branchId) data.branch = branchId;
+
+    if (!data.full_name || !data.role || !data.password) {
+      showToast('Please fill in all required fields.', 'error');
+      return;
+    }
 
     try {
       await api.post('/auth/users/', data);
@@ -172,7 +201,7 @@ async function editUser(id) {
             <input type="text" id="edit-user-phone" class="input-field" value="${u.phone || ''}">
           </div>
           <div class="form-group">
-            <label>Role</label>
+            <label>Role *</label>
             <select id="edit-user-role" class="input-field" required>
               <option value="cashier" ${u.role === 'cashier' ? 'selected' : ''}>Cashier / Accountant</option>
               <option value="manager" ${u.role === 'manager' ? 'selected' : ''}>Manager</option>
@@ -195,9 +224,9 @@ async function editUser(id) {
     document.getElementById('edit-user-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = {
-        full_name: document.getElementById('edit-user-fullname').value,
-        email: document.getElementById('edit-user-email').value,
-        phone: document.getElementById('edit-user-phone').value,
+        full_name: document.getElementById('edit-user-fullname').value.trim(),
+        email: document.getElementById('edit-user-email').value.trim(),
+        phone: document.getElementById('edit-user-phone').value.trim(),
         role: document.getElementById('edit-user-role').value,
       };
       const branchId = document.getElementById('edit-user-branch').value;

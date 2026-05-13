@@ -4,7 +4,7 @@ async function renderNotifications() {
     <div class="card" style="background: linear-gradient(135deg, #FF8C00, #FF5E7E); color:white; margin-bottom:20px;">
       <div class="flex-between">
         <h2><i class="fas fa-bell"></i> Notifications</h2>
-        <button class="btn btn-sm" onclick="clearAllNotifications()" style="background:white; color:#FF5E7E;">
+        <button class="btn btn-sm" onclick="clearAllNotifications()" style="background:white; color:#FF5E7E; font-weight:700;">
           <i class="fas fa-trash-alt"></i> Clear All
         </button>
       </div>
@@ -22,7 +22,7 @@ async function loadNotifications() {
     const notifications = res.data.results || [];
 
     if (notifications.length === 0) {
-      list.innerHTML = '<div class="card text-center">No notifications yet.</div>';
+      list.innerHTML = '<div class="card text-center"><i class="fas fa-bell-slash" style="font-size:2rem; color:#718096;"></i><p>No notifications yet.</p></div>';
       return;
     }
 
@@ -32,15 +32,15 @@ async function loadNotifications() {
       const color = getNotifColor(n.type);
       return `
         <div class="notif-card" style="border-left: 5px solid ${color}; opacity:${isRead ? '0.6' : '1'}; transition:all 0.3s; margin-bottom:12px;">
-          <div class="flex-between" style="padding:15px 20px;">
-            <div style="display:flex; align-items:center; gap:15px;">
+          <div class="flex-between" style="padding:15px 20px; flex-wrap:wrap; gap:10px;">
+            <div style="display:flex; align-items:center; gap:15px; flex:1; min-width:200px;">
               <div style="font-size:1.5rem; color:${color};">${icon}</div>
               <div>
                 <p style="margin:0; font-weight:600; ${isRead ? 'text-decoration:line-through;' : ''}">${n.message}</p>
                 <small style="color:#718096;">${new Date(n.created_at).toLocaleString()}</small>
               </div>
             </div>
-            <div style="display:flex; gap:10px; align-items:center;">
+            <div style="display:flex; gap:10px; align-items:center; flex-shrink:0;">
               <button class="btn btn-sm btn-outline" onclick="markAsRead('${n.id}')" ${isRead ? 'disabled' : ''} style="padding:4px 12px;">
                 <i class="fas fa-check"></i> Read
               </button>

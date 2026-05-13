@@ -40,13 +40,21 @@ async function handleLogin(e) {
     return;
   }
 
+  const btn = document.querySelector('#login-form button[type="submit"]');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Logging in...';
+
   try {
     const data = await loginUser({ email, password });
     localStorage.setItem('access_token', data.tokens.access);
     localStorage.setItem('refresh_token', data.tokens.refresh);
-    await loadUserInfo();
+
+    // Refresh header/sidebar in background – no need to wait for it
+    loadUserInfo().catch(e => console.error(e));
+
     showToast('Welcome back!', 'success');
-    setTimeout(() => { window.location.hash = '#/dashboard'; }, 1000);
+    // Redirect immediately
+    window.location.hash = '#/dashboard';
   } catch (error) {
     const status = error.response?.status;
     const errData = error.response?.data;
@@ -60,6 +68,9 @@ async function handleLogin(e) {
       return;
     }
     showToast('Something went wrong. Please try again.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Login';
   }
 }
 

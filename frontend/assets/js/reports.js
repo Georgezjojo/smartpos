@@ -139,9 +139,21 @@ async function refreshReport(reportType) {
   document.getElementById('report-content').innerHTML = html;
 }
 
-function downloadReport(type) {
+// ---------- Download CSV (using authenticated API blob download, works everywhere) ----------
+async function downloadReport(type) {
   const params = getDateParams();
-  window.open(`http://localhost:8000/api/reports/export/${type}/${params}`, '_blank');
+  try {
+    const response = await api.get(`/reports/export/${type}/${params}`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${type}_report.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (e) {
+    showToast('Export failed', 'error');
+  }
 }
 
 // ---------- Individual Report HTML Loaders (with charts & formulas) ----------
@@ -326,23 +338,6 @@ async function getSalesTrendHTML(params) {
         options: { responsive: true, plugins: { tooltip: { callbacks: { label: ctx => ctx.raw + ' KES' } } } }
       });
     </script>`;
-}
-
-// CSV Export
-async function exportReport(type) {
-  const params = getDateParams();
-  try {
-    const response = await api.get(`/reports/export/${type}/${params}`, { responseType: 'blob' });
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `${type}_report.csv`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  } catch (e) {
-    showToast('Export failed', 'error');
-  }
 }
 
 // Period Summary Generator

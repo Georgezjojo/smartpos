@@ -18,6 +18,7 @@ const routes = {
   'ai': renderAIPage,
   'contact': renderContactPage,
   'transfers': renderTransfers,
+  'customers': renderCustomers,          // ← added the customers page
 };
 
 function router() {
@@ -27,7 +28,7 @@ function router() {
   const protectedRoutes = [
     'dashboard', 'pos', 'inventory', 'reports', 'expenses',
     'users', 'notifications', 'profile', 'settings', 'ai',
-    'contact', 'transfers'
+    'contact', 'transfers', 'customers'     // ← added customers to protected routes
   ];
 
   // Show/hide footer & AI bubble based on current page
@@ -59,6 +60,15 @@ function router() {
       '<div class="card text-center"><h2>404 - Page Not Found</h2></div>';
   }
   updateActiveNav(route);
+
+  // Close mobile sidebar after navigating to a new page
+  if (window.innerWidth <= 768) {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && sidebar.classList.contains('open')) {
+      sidebar.classList.remove('open');
+      removeSidebarBackdrop();   // defined in components.js
+    }
+  }
 }
 
 function updateActiveNav(route) {

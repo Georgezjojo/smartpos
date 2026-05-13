@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="description" content="SmartPOS - Intelligent Point of Sale & Business Intelligence System">
   <meta name="theme-color" content="#6C5CE7">
   <title>SmartPOS – Business Intelligence System</title>
@@ -26,6 +26,12 @@
     <aside id="sidebar"></aside>
     <main id="main-content"></main>
   </div>
+
+  <!-- Mobile sidebar toggle button (hidden on desktop, visible on mobile) -->
+  <button id="sidebar-toggle" class="sidebar-toggle-btn" aria-label="Toggle menu">
+    <i class="fas fa-bars"></i>
+  </button>
+
   <div id="toast-container"></div>
   <div id="modal-overlay" class="hidden"></div>
   <footer class="app-footer" id="app-footer">

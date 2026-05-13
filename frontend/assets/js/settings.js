@@ -89,10 +89,15 @@ async function loadBranches() {
   try {
     const res = await getBranches();
     const list = document.getElementById('branch-list');
-    list.innerHTML = res.results.map(b =>
-      `<div class="flex-between p-10" style="padding:10px; border-bottom:1px solid var(--border-light);">
-        <span><strong>${b.name}</strong> – ${b.location}</span>
-        <span>${b.phone || ''}</span>
+    const branches = res.results || [];
+    if (branches.length === 0) {
+      list.innerHTML = '<p class="text-center text-muted">No branches added yet.</p>';
+      return;
+    }
+    list.innerHTML = branches.map(b =>
+      `<div class="flex-between" style="padding:10px; border-bottom:1px solid var(--border-light); flex-wrap:wrap; gap:5px;">
+        <span style="flex:1; min-width:150px;"><strong>${b.name}</strong> – ${b.location}</span>
+        <span style="color:#718096;">${b.phone || ''}</span>
       </div>`
     ).join('');
   } catch (e) {
@@ -109,13 +114,16 @@ function showAddBranchModal() {
       <h3>Add Branch</h3>
       <form id="add-branch-form">
         <div class="form-group">
-          <input type="text" id="branch-name" class="input-field" placeholder="Branch Name *" required>
+          <label>Branch Name *</label>
+          <input type="text" id="branch-name" class="input-field" placeholder="e.g., Main Branch" required>
         </div>
         <div class="form-group">
-          <input type="text" id="branch-location" class="input-field" placeholder="Location *" required>
+          <label>Location *</label>
+          <input type="text" id="branch-location" class="input-field" placeholder="City or area" required>
         </div>
         <div class="form-group">
-          <input type="text" id="branch-phone" class="input-field" placeholder="Phone (optional)">
+          <label>Phone (optional)</label>
+          <input type="text" id="branch-phone" class="input-field" placeholder="+254...">
         </div>
         <button type="submit" class="btn btn-primary w-full">Create Branch</button>
       </form>
@@ -124,10 +132,14 @@ function showAddBranchModal() {
   document.getElementById('add-branch-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = {
-      name: document.getElementById('branch-name').value,
-      location: document.getElementById('branch-location').value,
-      phone: document.getElementById('branch-phone').value,
+      name: document.getElementById('branch-name').value.trim(),
+      location: document.getElementById('branch-location').value.trim(),
+      phone: document.getElementById('branch-phone').value.trim(),
     };
+    if (!data.name || !data.location) {
+      showToast('Name and Location are required.', 'error');
+      return;
+    }
     try {
       await api.post('/business/branches/', data);
       modal.classList.add('hidden');

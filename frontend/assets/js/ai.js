@@ -46,6 +46,7 @@
       right: '24px',
       zIndex: '9998',
       width: '360px',
+      maxWidth: 'calc(100vw - 48px)',  // ensure it fits on small screens
       maxHeight: '500px',
       background: 'white',
       borderRadius: '16px',
