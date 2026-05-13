@@ -1,5 +1,6 @@
 import random, datetime
 from django.utils import timezone
+from django.conf import settings                     # ← added for BYPASS_OTP check
 from rest_framework import generics, status, views, permissions
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -48,6 +49,34 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+
+        # ---- OTP BYPASS (temporary – set BYPASS_OTP=True in settings.py) ----
+        if getattr(settings, 'BYPASS_OTP', False):
+            user.is_verified = True
+            user.save()
+
+            tokens = get_tokens_for_user(user)
+            AuditLog.objects.create(user=user, action='register', ip_address=get_client_ip(request))
+
+            # Welcome notification (same as first login)
+            if not Notification.objects.filter(user=user, type='welcome').exists():
+                Notification.objects.create(
+                    business=user.business,
+                    user=user,
+                    type='welcome',
+                    message=f'🎉 Welcome to SmartPOS, {user.full_name}! Your business "{user.business.name}" is all set up. Start exploring your dashboard, add products, and make your first sale!'
+                )
+                # Optionally still try to send welcome email/SMS (they will fail silently)
+                send_welcome_email.delay(user.email, user.full_name)
+                send_welcome_sms.delay(user.phone, user.full_name)
+
+            return Response({
+                'message': 'Account created successfully. You are now logged in.',
+                'tokens': tokens,
+                'user': UserSerializer(user).data
+            }, status=status.HTTP_201_CREATED)
+
+        # ---- ORIGINAL OTP FLOW (kept intact) ----
         otp_code = str(random.randint(100000, 999999))
         OTP.objects.create(
             user=user, code=otp_code, purpose='signup',

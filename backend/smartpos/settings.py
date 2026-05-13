@@ -160,21 +160,13 @@ CACHES = {
 }
 
 # ====================== EMAIL ======================
-ANYMAIL = {
-    "RESEND_API_KEY": os.environ.get("RESEND_API_KEY", ""),
-}
-EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
-DEFAULT_FROM_EMAIL = os.environ.get("FROM_EMAIL", "noreply@smartpos.com")
-ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@smartpos.com")
-DEVELOPER_EMAIL = os.environ.get("DEVELOPER_EMAIL", "developer@example.com")
-
-# Disable old SMTP settings
-EMAIL_HOST = None
-EMAIL_PORT = None
-EMAIL_HOST_USER = None
-EMAIL_HOST_PASSWORD = None
-EMAIL_USE_TLS = False
-EMAIL_USE_SSL = False
+# TEMPORARY – send emails to the console (they appear in Railway logs)
+# When you're ready for real email delivery, switch back to the Resend backend
+# and make sure 'django-anymail[resend]' is installed.
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = os.environ.get('FROM_EMAIL', 'noreply@smartpos.com')
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@smartpos.com')
+DEVELOPER_EMAIL = os.environ.get('DEVELOPER_EMAIL', 'developer@example.com')
 
 # ====================== SMS (Africa's Talking) ======================
 AFRICASTALKING_USERNAME = os.environ.get('AT_USERNAME', 'sandbox')
@@ -214,3 +206,7 @@ CSRF_COOKIE_SECURE = SECURE_COOKIES
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
+
+# ====================== OTP BYPASS (Temporary) ======================
+# Set to True to skip email/SMS OTP and activate accounts immediately
+BYPASS_OTP = True

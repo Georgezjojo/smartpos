@@ -432,17 +432,55 @@ body.public-page .app-footer { margin-left: 0; }
   /* Header adjust */
   #header {
     padding: 0 15px;
-    justify-content: center;
+    flex-wrap: nowrap;
+    justify-content: space-between;
   }
+
+  /* Hide the menu toggle in header because we have the floating button */
+  .header-left .menu-toggle {
+    display: none;
+  }
+
   .header-left {
     flex: unset;
     margin-left: 0;
   }
-  .global-search-wrapper {
-    max-width: 200px;
+
+  /* Logo stays small */
+  .logo-text {
+    font-size: 1.2rem;
   }
-  .header-right .user-name {
+
+  /* Hide global search on very small screens to save space (still accessible via floating search button if we had one, but we keep it on a new line if needed) */
+  .header-center {
+    display: none;   /* hide the search bar on mobile header – you can still search from the global search in sidebar/dashboard if you want, but to keep header clean */
+  }
+
+  /* Compact header right buttons */
+  .header-right {
+    gap: 8px;
+  }
+
+  /* Hide button text, show only icons */
+  .btn-text {
     display: none;
+  }
+
+  .btn-sm {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+
+  .theme-toggle {
+    font-size: 1.2rem;
+  }
+
+  .notification-bell {
+    font-size: 1rem;
+  }
+
+  .user-menu {
+    padding: 4px 8px;
   }
 
   /* Footer full width */
@@ -453,6 +491,10 @@ body.public-page .app-footer { margin-left: 0; }
   .footer-content {
     flex-direction: column;
     text-align: center;
+  }
+  .footer-links {
+    flex-direction: column;
+    gap: 10px;
   }
 
   /* General grid fallbacks */
@@ -519,6 +561,10 @@ body.public-page .app-footer { margin-left: 0; }
   }
   .product-grid-inv {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  /* Show search bar on tablet */
+  .header-center {
+    display: flex;
   }
 }
 

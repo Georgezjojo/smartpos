@@ -194,6 +194,7 @@ function renderRegisterPage() {
   }
 }
 
+// ===== UPDATED handleRegister (OTP‑bypass aware) =====
 async function handleRegister(e) {
   e.preventDefault();
 
@@ -220,6 +221,20 @@ async function handleRegister(e) {
 
   try {
     const res = await registerUser(data);
+
+    // --- OTP BYPASS (when backend returns tokens directly) ---
+    if (res.tokens) {
+      localStorage.setItem('access_token', res.tokens.access);
+      localStorage.setItem('refresh_token', res.tokens.refresh);
+      showToast('Account created! Logging you in…', 'success');
+      // Refresh header/sidebar in background
+      loadUserInfo().catch(e => console.error(e));
+      // Redirect to dashboard immediately
+      window.location.hash = '#/dashboard';
+      return;
+    }
+
+    // --- Old OTP flow (fallback) ---
     showToast('Registration successful! Please verify OTP.', 'success');
     localStorage.setItem('pendingUserId', res.user_id);
     setTimeout(() => { window.location.hash = '#/otp-verification'; }, 1000);
@@ -247,7 +262,7 @@ async function handleRegister(e) {
   }
 }
 
-// ========== OTP ==========
+// ========== OTP (unchanged) ==========
 let otpTimerInterval;
 
 function renderOTPPage() {
