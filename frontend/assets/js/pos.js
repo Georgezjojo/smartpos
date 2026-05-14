@@ -1,4 +1,4 @@
-// ========== POINT OF SALE (Orange Payment Overlay) ==========
+// ========== POINT OF SALE (Instant‑render + parallel data) ==========
 let cart = [];
 let paymentMethod = 'cash';
 let selectedCustomer = null;
@@ -13,6 +13,9 @@ let taxForcedOn = false;
 // Pending sale state
 let pendingSale = null;
 let pendingPaymentInterval = null;
+
+// Cache for profile / branch to avoid duplicate calls
+let _cachedProfile = null;
 
 function formatMpesaPhone(phone) {
   let cleaned = phone.replace(/[^0-9]/g, '');
@@ -37,11 +40,12 @@ function updateOnlineStatus() {
   }
 }
 
-// ---------- Business & Branch resolver ----------
+// ---------- Business & Branch resolver (cached) ----------
 async function getCurrentBranchAndBusiness() {
   if (currentBranchId && currentBusinessId) return { branchId: currentBranchId, businessId: currentBusinessId };
   try {
-    const profile = await getProfile();
+    if (!_cachedProfile) _cachedProfile = await getProfile();
+    const profile = _cachedProfile;
     currentBusinessId = profile.business?.id || profile.business;
     if (!currentBusinessId) {
       showToast('No business linked to your profile. Contact admin.', 'error');
@@ -62,14 +66,14 @@ async function getCurrentBranchAndBusiness() {
     return { branchId: currentBranchId, businessId: currentBusinessId };
   } catch (e) {
     console.warn('Branch detection failed', e);
-    showToast('Could not load profile. Please refresh.', 'error');
     return null;
   }
 }
 
 async function initUserAndTax() {
   try {
-    const profile = await getProfile();
+    if (!_cachedProfile) _cachedProfile = await getProfile();
+    const profile = _cachedProfile;
     currentUserRole = profile.role || 'cashier';
     taxForcedOn = (currentUserRole === 'cashier');
   } catch (e) {
@@ -78,14 +82,13 @@ async function initUserAndTax() {
   }
 }
 
-// ---------- Render main POS ----------
+// ---------- Render main POS (instant layout, parallel data) ----------
 async function renderPOS() {
-  await initUserAndTax();
-  await getCurrentBranchAndBusiness();
-
+  // 1. Show the layout IMMEDIATELY
   document.getElementById('main-content').innerHTML = `
     <div style="display:flex; justify-content:flex-end; padding:6px 0;">
       <div id="online-status" style="padding:4px 12px; border-radius:20px; font-size:0.85rem; font-weight:600; display:inline-flex; align-items:center; gap:6px;">
+        <span style="color:#F97316;">⏳ Loading…</span>
       </div>
     </div>
     <div class="pos-container-new" style="max-width:1300px; margin:auto;">
@@ -98,7 +101,9 @@ async function renderPOS() {
               <i class="fas fa-search pos-search-icon" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#A0AEC0;"></i>
             </div>
           </div>
-          <div id="product-list" class="product-list-compact" style="overflow-y:auto; max-height:60vh;"></div>
+          <div id="product-list" class="product-list-compact" style="overflow-y:auto; max-height:60vh;">
+            <div class="text-center text-muted" style="padding:20px;">Loading products…</div>
+          </div>
         </div>
       </div>
       <div class="pos-right-new">
@@ -121,8 +126,7 @@ async function renderPOS() {
             </div>
             <div class="flex-between" style="margin-bottom:4px; align-items:center;">
               <span>Tax (16%)</span>
-              <input type="checkbox" id="tax-toggle" ${taxForcedOn ? 'checked disabled' : 'checked'} onchange="updateCart()">
-              ${taxForcedOn ? '<small style="color:#718096;">(locked)</small>' : ''}
+              <input type="checkbox" id="tax-toggle" checked onchange="updateCart()">
             </div>
             <div class="flex-between" style="margin-bottom:4px;">
               <span>Tax Amount</span><strong id="cart-tax">0.00</strong>
@@ -164,19 +168,42 @@ async function renderPOS() {
     </div>
   `;
 
-  await loadProducts();
-  await loadCustomers();
-  if (document.getElementById('discount-percent')) {
-    updateCartDisplay();
-  }
+  updateCartDisplay();
   updateOnlineStatus();
   window.addEventListener('online', updateOnlineStatus);
   window.addEventListener('offline', updateOnlineStatus);
   document.addEventListener('keydown', handlePOSKeys);
   checkPendingSync();
+
+  // 2. Fetch all data in PARALLEL
+  const [userResult, branchResult, productsResult, customersResult] = await Promise.allSettled([
+    initUserAndTax(),
+    getCurrentBranchAndBusiness(),
+    loadProducts(),
+    loadCustomers()
+  ]);
+
+  // 3. Apply the tax lock now that we know the role
+  const taxCheckbox = document.getElementById('tax-toggle');
+  if (taxCheckbox) {
+    if (taxForcedOn) {
+      taxCheckbox.checked = true;
+      taxCheckbox.disabled = true;
+      const small = taxCheckbox.parentElement.querySelector('small');
+      if (!small) {
+        const s = document.createElement('small');
+        s.style.color = '#718096';
+        s.textContent = ' (locked)';
+        taxCheckbox.parentElement.appendChild(s);
+      }
+    }
+  }
+
+  // 4. Update the online status
+  updateOnlineStatus();
 }
 
-// ---------- Load products (single‑click adds) ----------
+// ---------- Load products (now returns a promise we can parallelise) ----------
 async function loadProducts() {
   try {
     if (navigator.onLine) {
@@ -195,6 +222,7 @@ async function loadProducts() {
       });
     }
     const container = document.getElementById('product-list');
+    if (!container) return;
     const products = Object.values(productsMap);
     if (products.length === 0) {
       container.innerHTML = '<div class="text-center text-muted" style="padding:10px;">No products found.</div>';
@@ -213,11 +241,11 @@ async function loadProducts() {
         `).join('')}
       </table>
     `;
-  } catch (e) { showToast('Failed to load products', 'error'); }
+  } catch (e) { /* ignore – layout already visible */ }
 }
 
 function filterPOS() {
-  const query = document.getElementById('pos-search').value.toLowerCase();
+  const query = document.getElementById('pos-search')?.value?.toLowerCase() || '';
   document.querySelectorAll('.product-row').forEach(row => row.style.display = row.dataset.name.includes(query) ? '' : 'none');
 }
 
@@ -227,6 +255,7 @@ async function loadCustomers() {
     if (navigator.onLine) {
       const res = await getCustomers();
       const select = document.getElementById('customer-select');
+      if (!select) return;
       res.results.forEach(c => {
         customerMap[c.id] = c;
         const opt = document.createElement('option');
@@ -237,6 +266,7 @@ async function loadCustomers() {
     } else {
       const localCustomers = await db.customers.toArray();
       const select = document.getElementById('customer-select');
+      if (!select) return;
       localCustomers.forEach(c => {
         customerMap[c.id] = c;
         const opt = document.createElement('option');
@@ -267,11 +297,12 @@ function changeQuantity(productId, delta) {
   updateCart();
 }
 function clearCart() { cart = []; updateCart(); removePaymentOverlay(); if (pendingPaymentInterval) { clearInterval(pendingPaymentInterval); pendingPaymentInterval = null; } pendingSale = null; }
-function selectCustomer() { selectedCustomer = document.getElementById('customer-select').value || null; }
+function selectCustomer() { selectedCustomer = document.getElementById('customer-select')?.value || null; }
 function setPayment(method) {
   paymentMethod = method;
   document.querySelectorAll('.btn-payment-new').forEach(b => b.classList.remove('active-payment'));
-  document.getElementById(`btn-${method}`).classList.add('active-payment');
+  const btn = document.getElementById(`btn-${method}`);
+  if (btn) btn.classList.add('active-payment');
 }
 
 // ---------- Cart display (null‑safe) ----------
@@ -363,12 +394,17 @@ function removePaymentOverlay() {
 // ---------- Process sale entry point ----------
 async function processSale() {
   if (cart.length === 0) return;
-  const total = parseFloat(document.getElementById('cart-total').textContent);
+  const totalEl = document.getElementById('cart-total');
+  if (!totalEl) return;
+  const total = parseFloat(totalEl.textContent);
   if (!confirm(`Start sale for ${total.toFixed(2)} KES?`)) return;
 
-  const discountValue = parseFloat(document.getElementById('cart-discount').textContent.replace('-','')) || 0;
-  const taxAmount = parseFloat(document.getElementById('cart-tax').textContent) || 0;
-  const subtotal = parseFloat(document.getElementById('cart-subtotal').textContent) || 0;
+  const discountEl = document.getElementById('cart-discount');
+  const taxEl = document.getElementById('cart-tax');
+  const subtotalEl = document.getElementById('cart-subtotal');
+  const discountValue = parseFloat((discountEl?.textContent || '').replace('-','')) || 0;
+  const taxAmount = parseFloat(taxEl?.textContent) || 0;
+  const subtotal = parseFloat(subtotalEl?.textContent) || 0;
 
   const info = await getCurrentBranchAndBusiness();
   if (!info || !info.branchId || !info.businessId) {
@@ -416,25 +452,31 @@ async function processSale() {
       </div>
     `;
     showPaymentOverlay(overlayHtml);
-    document.getElementById('pay-btn').disabled = true;
-    document.getElementById('pay-btn').innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Awaiting Payment';
+    const payBtn = document.getElementById('pay-btn');
+    if (payBtn) {
+      payBtn.disabled = true;
+      payBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Awaiting Payment';
+    }
   }
 }
 
-// ---------- Cancel overlay (without finalizing) ----------
+// ---------- Cancel overlay ----------
 function cancelPaymentOverlay() {
   removePaymentOverlay();
   if (pendingPaymentInterval) { clearInterval(pendingPaymentInterval); pendingPaymentInterval = null; }
   pendingSale = null;
-  document.getElementById('pay-btn').disabled = cart.length === 0;
-  document.getElementById('pay-btn').innerHTML = '<i class="fas fa-check-circle"></i> Complete Sale';
+  const payBtn = document.getElementById('pay-btn');
+  if (payBtn) {
+    payBtn.disabled = cart.length === 0;
+    payBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete Sale';
+  }
   showToast('Payment cancelled.', 'info');
 }
 
-// ---------- STK Push logic ----------
+// ---------- STK Push ----------
 async function sendSTKPush() {
   if (!pendingSale) return;
-  const phoneInput = document.getElementById('mpesa-phone').value.trim();
+  const phoneInput = document.getElementById('mpesa-phone')?.value?.trim();
   if (!phoneInput) { showToast('Please enter the customer phone number', 'error'); return; }
 
   const phone = formatMpesaPhone(phoneInput);
@@ -446,14 +488,14 @@ async function sendSTKPush() {
   const total = pendingSale.total;
   const reference = `POS-${Date.now()}`;
   const statusDiv = document.getElementById('payment-status-msg');
-  statusDiv.innerHTML = '<span style="color:#FF8C00;">⏳ Sending payment request...</span>';
+  if (statusDiv) statusDiv.innerHTML = '<span style="color:#FF8C00;">⏳ Sending payment request...</span>';
 
   try {
     const result = await initiateMpesaSTK(phone, total, reference);
-    statusDiv.innerHTML = '<span style="color:#FF8C00;">⏳ Waiting for customer PIN...</span>';
+    if (statusDiv) statusDiv.innerHTML = '<span style="color:#FF8C00;">⏳ Waiting for customer PIN...</span>';
     startPaymentPolling(result.checkout_request_id);
   } catch (e) {
-    statusDiv.innerHTML = '<span style="color:#E53E3E;">❌ STK Push failed. Try manual confirmation.</span>';
+    if (statusDiv) statusDiv.innerHTML = '<span style="color:#E53E3E;">❌ STK Push failed. Try manual confirmation.</span>';
     showToast('STK Push failed: ' + (e.response?.data?.detail || e.message), 'error');
   }
 }
@@ -465,27 +507,29 @@ function startPaymentPolling(checkoutRequestId) {
     attempts++;
     try {
       const status = await checkMpesaStatus(checkoutRequestId);
+      const statusDiv = document.getElementById('payment-status-msg');
       if (status.status === 'Success') {
         clearInterval(pendingPaymentInterval);
         pendingPaymentInterval = null;
-        document.getElementById('payment-status-msg').innerHTML = '<span style="color:#38A169;">✅ Payment received!</span>';
+        if (statusDiv) statusDiv.innerHTML = '<span style="color:#38A169;">✅ Payment received!</span>';
         removePaymentOverlay();
         await finalizeSale(pendingSale.saleData);
       } else if (status.status === 'Failed' || attempts > 15) {
         clearInterval(pendingPaymentInterval);
         pendingPaymentInterval = null;
-        document.getElementById('payment-status-msg').innerHTML = '<span style="color:#E53E3E;">❌ Payment failed or timeout.</span>';
+        if (statusDiv) statusDiv.innerHTML = '<span style="color:#E53E3E;">❌ Payment failed or timeout.</span>';
       }
     } catch (e) {}
   }, 4000);
 }
 
-// ---------- Manual confirmation inside overlay ----------
+// ---------- Manual confirmation ----------
 function showManualConfirmInOverlay() {
   if (!pendingSale) return;
   const overlay = document.getElementById('pos-payment-overlay');
   if (!overlay) return;
   const card = overlay.querySelector('div');
+  if (!card) return;
   card.innerHTML = `
     <div style="padding:20px; font-family: 'Segoe UI', sans-serif;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -515,6 +559,7 @@ async function loadRecentPayments() {
     const res = await api.get('/payments/recent/');
     const payments = res.data.results || [];
     const container = document.getElementById('recent-payments-list');
+    if (!container) return;
     if (payments.length === 0) {
       container.innerHTML = '<p class="text-muted">No recent unconfirmed payments.</p>';
       return;
@@ -573,7 +618,7 @@ function showMPesaMainOverlay() {
   const overlay = document.getElementById('pos-payment-overlay');
   if (overlay) {
     const card = overlay.querySelector('div');
-    card.innerHTML = overlayHtml;
+    if (card) card.innerHTML = overlayHtml;
   }
 }
 
@@ -592,8 +637,10 @@ async function finalizeSale(saleData) {
   removePaymentOverlay();
   if (pendingPaymentInterval) { clearInterval(pendingPaymentInterval); pendingPaymentInterval = null; }
   const payBtn = document.getElementById('pay-btn');
-  payBtn.disabled = true;
-  payBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Completing...';
+  if (payBtn) {
+    payBtn.disabled = true;
+    payBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Completing...';
+  }
 
   try {
     if (navigator.onLine) {
@@ -629,8 +676,10 @@ async function finalizeSale(saleData) {
     console.error('Sale error:', e.response?.data || e);
     showToast(`Sale failed: ${detail}`, 'error');
   } finally {
-    payBtn.disabled = false;
-    payBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete Sale';
+    if (payBtn) {
+      payBtn.disabled = false;
+      payBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete Sale';
+    }
     checkPendingSync();
   }
 }
@@ -726,7 +775,7 @@ async function syncSales() {
 
 // ---------- Keyboard shortcuts ----------
 function handlePOSKeys(e) {
-  if (e.ctrlKey && e.key === 'k') { e.preventDefault(); document.getElementById('pos-search').focus(); }
+  if (e.ctrlKey && e.key === 'k') { e.preventDefault(); document.getElementById('pos-search')?.focus(); }
   if (e.key === 'F2') setPayment('cash');
   if (e.key === 'F3') setPayment('card');
   if (e.key === 'F4') setPayment('mpesa');
