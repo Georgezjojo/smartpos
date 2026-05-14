@@ -286,3 +286,25 @@ document.addEventListener('DOMContentLoaded', () => {
     mobileToggleBtn.addEventListener('click', toggleSidebar);
   }
 });
+
+/* ========== GLOBAL ERROR MODAL ========== */
+function showErrorModal(message) {
+  const overlay = document.getElementById('modal-overlay');
+  if (!overlay) return;
+
+  // Replace any newlines with <br> and wrap field names nicely
+  const formatted = message
+    .replace(/\n/g, '<br>')
+    .replace(/(\w+):/g, '<strong>$1:</strong>');
+
+  overlay.innerHTML = `
+    <div class="modal-content" style="border-top: 4px solid #E53E3E; text-align: center;">
+      <i class="fas fa-exclamation-circle" style="font-size: 2.5rem; color: #E53E3E;"></i>
+      <h3 style="color: #E53E3E; margin-top: 10px;">Oops!</h3>
+      <p style="margin: 15px 0; line-height: 1.6;">${formatted}</p>
+      <button class="btn btn-primary w-full" onclick="document.getElementById('modal-overlay').classList.add('hidden')">Close</button>
+    </div>
+  `;
+
+  overlay.classList.remove('hidden');
+}

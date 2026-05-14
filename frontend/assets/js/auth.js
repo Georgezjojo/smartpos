@@ -36,7 +36,7 @@ async function handleLogin(e) {
   const password = document.getElementById('login-password').value;
 
   if (!email || !password) {
-    showToast('Please fill in all fields.', 'error');
+    showErrorModal('Please fill in all fields.');
     return;
   }
 
@@ -48,26 +48,22 @@ async function handleLogin(e) {
     const data = await loginUser({ email, password });
     localStorage.setItem('access_token', data.tokens.access);
     localStorage.setItem('refresh_token', data.tokens.refresh);
-
-    // Refresh header/sidebar in background – no need to wait for it
     loadUserInfo().catch(e => console.error(e));
-
     showToast('Welcome back!', 'success');
-    // Redirect immediately
     window.location.hash = '#/dashboard';
   } catch (error) {
     const status = error.response?.status;
     const errData = error.response?.data;
     if (status === 423 && errData?.locked_seconds) {
-      showToast('Account locked due to too many attempts.', 'error');
+      showErrorModal('Account locked due to too many attempts.\nPlease wait ' + errData.locked_seconds + ' seconds.');
       showLockoutTimer(errData.locked_seconds);
       return;
     }
     if (status === 401) {
-      showToast('Invalid email or password.', 'error');
+      showErrorModal('Invalid email or password.');
       return;
     }
-    showToast('Something went wrong. Please try again.', 'error');
+    showErrorModal('Something went wrong. Please try again.');
   } finally {
     btn.disabled = false;
     btn.innerHTML = 'Login';
@@ -198,7 +194,7 @@ function renderRegisterPage() {
   }
 }
 
-// ===== UPDATED handleRegister (passcode + OTP‑bypass) =====
+// ===== UPDATED handleRegister (passcode + pop‑up errors) =====
 async function handleRegister(e) {
   e.preventDefault();
 
@@ -207,7 +203,7 @@ async function handleRegister(e) {
       !document.getElementById('reg-password').value ||
       !document.getElementById('reg-password2').value ||
       !document.getElementById('reg-passcode').value.trim()) {
-    showToast('Please fill in all required fields.', 'error');
+    showErrorModal('Please fill in all required fields.');
     return;
   }
 
@@ -222,7 +218,7 @@ async function handleRegister(e) {
     phone: document.getElementById('reg-phone').value,
     password: document.getElementById('reg-password').value,
     password2: document.getElementById('reg-password2').value,
-    passcode: document.getElementById('reg-passcode').value.trim(),   // ← NEW
+    passcode: document.getElementById('reg-passcode').value.trim(),
   };
 
   try {
@@ -233,9 +229,7 @@ async function handleRegister(e) {
       localStorage.setItem('access_token', res.tokens.access);
       localStorage.setItem('refresh_token', res.tokens.refresh);
       showToast('Account created! Logging you in…', 'success');
-      // Refresh header/sidebar in background
       loadUserInfo().catch(e => console.error(e));
-      // Redirect to dashboard immediately
       window.location.hash = '#/dashboard';
       return;
     }
@@ -248,20 +242,16 @@ async function handleRegister(e) {
     console.log('Full error:', error);
     const errData = error.response?.data;
     if (errData) {
-      // Handle field‑specific errors (including "passcode")
-      const messages = [];
-      for (const [field, msg] of Object.entries(errData)) {
-        messages.push(...(Array.isArray(msg) ? msg : [msg]));
+      // Build a bullet list of all field errors
+      let errorMsg = '';
+      for (const [field, messages] of Object.entries(errData)) {
+        const fieldName = field.replace(/_/g, ' ');
+        const msgs = Array.isArray(messages) ? messages : [messages];
+        errorMsg += `• ${fieldName}: ${msgs.join(', ')}\n`;
       }
-      if (messages.length > 0) {
-        showToast(messages.join('\n'), 'error');
-      } else if (errData.detail) {
-        showToast(errData.detail, 'error');
-      } else {
-        showToast('Registration failed.', 'error');
-      }
+      showErrorModal(errorMsg || 'Registration failed.');
     } else {
-      showToast('Network error. Please try again.', 'error');
+      showErrorModal('Network error. Please try again.');
     }
   } finally {
     regBtn.disabled = false;
