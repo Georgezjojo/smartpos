@@ -97,36 +97,36 @@ document.addEventListener('click', function(e) {
   }
 });
 
-/* ========== SIDEBAR (updated with Customers link) ========== */
+/* ========== SIDEBAR (robust navigation) ========== */
 function renderSidebar() {
   const sidebar = document.getElementById('sidebar');
   sidebar.innerHTML = `
     <nav class="sidebar-nav">
-      <a href="#/dashboard" class="nav-item"><i class="fas fa-chart-line"></i> Dashboard</a>
-      <a href="#/pos" class="nav-item pos-button"><i class="fas fa-cash-register"></i> Point of Sale</a>
-      <a href="#/inventory" class="nav-item"><i class="fas fa-boxes"></i> Inventory</a>
-      <a href="#/transfers" class="nav-item"><i class="fas fa-exchange-alt"></i> Stock Transfer</a>
-      <a href="#/reports" class="nav-item"><i class="fas fa-file-invoice"></i> Reports</a>
-      <a href="#/expenses" class="nav-item"><i class="fas fa-receipt"></i> Expenses</a>
-      <a href="#/users" class="nav-item admin-only"><i class="fas fa-users"></i> Users</a>
-      <a href="#/customers" class="nav-item"><i class="fas fa-users"></i> Customers</a>
-      <a href="#/ai" class="nav-item"><i class="fas fa-robot"></i> AI Assistant</a>
-      <a href="#/notifications" class="nav-item"><i class="fas fa-bell"></i> Notifications</a>
-      <a href="#/profile" class="nav-item"><i class="fas fa-user-circle"></i> Profile</a>
-      <a href="#/settings" class="nav-item admin-only"><i class="fas fa-cog"></i> Settings</a>
-      <a href="#/contact" class="nav-item"><i class="fas fa-envelope"></i> Contact Us</a>
+      <a href="#/dashboard" class="nav-item" onclick="navigateAndCloseSidebar(event, '#/dashboard')"><i class="fas fa-chart-line"></i> Dashboard</a>
+      <a href="#/pos" class="nav-item pos-button" onclick="navigateAndCloseSidebar(event, '#/pos')"><i class="fas fa-cash-register"></i> Point of Sale</a>
+      <a href="#/inventory" class="nav-item" onclick="navigateAndCloseSidebar(event, '#/inventory')"><i class="fas fa-boxes"></i> Inventory</a>
+      <a href="#/transfers" class="nav-item" onclick="navigateAndCloseSidebar(event, '#/transfers')"><i class="fas fa-exchange-alt"></i> Stock Transfer</a>
+      <a href="#/reports" class="nav-item" onclick="navigateAndCloseSidebar(event, '#/reports')"><i class="fas fa-file-invoice"></i> Reports</a>
+      <a href="#/expenses" class="nav-item" onclick="navigateAndCloseSidebar(event, '#/expenses')"><i class="fas fa-receipt"></i> Expenses</a>
+      <a href="#/users" class="nav-item admin-only" onclick="navigateAndCloseSidebar(event, '#/users')"><i class="fas fa-users"></i> Users</a>
+      <a href="#/customers" class="nav-item" onclick="navigateAndCloseSidebar(event, '#/customers')"><i class="fas fa-users"></i> Customers</a>
+      <a href="#/ai" class="nav-item" onclick="navigateAndCloseSidebar(event, '#/ai')"><i class="fas fa-robot"></i> AI Assistant</a>
+      <a href="#/notifications" class="nav-item" onclick="navigateAndCloseSidebar(event, '#/notifications')"><i class="fas fa-bell"></i> Notifications</a>
+      <a href="#/profile" class="nav-item" onclick="navigateAndCloseSidebar(event, '#/profile')"><i class="fas fa-user-circle"></i> Profile</a>
+      <a href="#/settings" class="nav-item admin-only" onclick="navigateAndCloseSidebar(event, '#/settings')"><i class="fas fa-cog"></i> Settings</a>
+      <a href="#/contact" class="nav-item" onclick="navigateAndCloseSidebar(event, '#/contact')"><i class="fas fa-envelope"></i> Contact Us</a>
       <a href="#" onclick="logout()" class="nav-item"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </nav>
   `;
+}
 
-  // Close sidebar on mobile after any nav link click
-  sidebar.querySelectorAll('.nav-item').forEach(link => {
-    link.addEventListener('click', () => {
-      if (window.innerWidth <= 768) {
-        closeSidebar();
-      }
-    });
-  });
+// Helper to navigate and close sidebar on mobile
+function navigateAndCloseSidebar(e, hash) {
+  e.preventDefault();
+  window.location.hash = hash;
+  if (window.innerWidth <= 768) {
+    closeSidebar();
+  }
 }
 
 /* ---------- Sidebar toggling ---------- */

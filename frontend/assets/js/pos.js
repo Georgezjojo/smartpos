@@ -166,7 +166,9 @@ async function renderPOS() {
 
   await loadProducts();
   await loadCustomers();
-  updateCartDisplay();
+  if (document.getElementById('discount-percent')) {
+    updateCartDisplay();
+  }
   updateOnlineStatus();
   window.addEventListener('online', updateOnlineStatus);
   window.addEventListener('offline', updateOnlineStatus);
@@ -272,14 +274,17 @@ function setPayment(method) {
   document.getElementById(`btn-${method}`).classList.add('active-payment');
 }
 
-// ---------- Cart display ----------
+// ---------- Cart display (null‑safe) ----------
 function updateCart() {
-  const discountPct = parseFloat(document.getElementById('discount-percent').value) || 0;
+  const discountEl = document.getElementById('discount-percent');
   const taxCheckbox = document.getElementById('tax-toggle');
+  const container = document.getElementById('cart-items-new');
+  if (!discountEl || !taxCheckbox || !container) return;
+
+  const discountPct = parseFloat(discountEl.value) || 0;
   if (taxForcedOn) taxCheckbox.checked = true;
   const applyTax = taxCheckbox.checked;
 
-  const container = document.getElementById('cart-items-new');
   let subtotal = 0, totalProductDiscount = 0, html = '';
   cart.forEach(item => {
     const lineOriginal = item.originalPrice * item.quantity;
@@ -314,11 +319,17 @@ function updateCart() {
   const taxAmount = applyTax ? taxable * 0.16 : 0;
   const total = taxable + taxAmount;
 
-  document.getElementById('cart-subtotal').textContent = subtotal.toFixed(2) + ' KES';
-  document.getElementById('cart-discount').textContent = '-' + totalSavings.toFixed(2) + ' KES';
-  document.getElementById('cart-tax').textContent = taxAmount.toFixed(2) + ' KES';
-  document.getElementById('cart-total').textContent = total.toFixed(2) + ' KES';
-  document.getElementById('pay-btn').disabled = cart.length === 0;
+  const cartSubtotalEl = document.getElementById('cart-subtotal');
+  const cartDiscountEl = document.getElementById('cart-discount');
+  const cartTaxEl = document.getElementById('cart-tax');
+  const cartTotalEl = document.getElementById('cart-total');
+  const payBtn = document.getElementById('pay-btn');
+
+  if (cartSubtotalEl) cartSubtotalEl.textContent = subtotal.toFixed(2) + ' KES';
+  if (cartDiscountEl) cartDiscountEl.textContent = '-' + totalSavings.toFixed(2) + ' KES';
+  if (cartTaxEl) cartTaxEl.textContent = taxAmount.toFixed(2) + ' KES';
+  if (cartTotalEl) cartTotalEl.textContent = total.toFixed(2) + ' KES';
+  if (payBtn) payBtn.disabled = cart.length === 0;
 }
 function updateCartDisplay() { updateCart(); }
 
