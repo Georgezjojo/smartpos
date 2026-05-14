@@ -91,7 +91,7 @@ function showLockoutTimer(seconds) {
   }, 1000);
 }
 
-// ========== REGISTER ==========
+// ========== REGISTER (with passcode) ==========
 function renderRegisterPage() {
   document.getElementById('main-content').innerHTML = `
     <div id="public-overlay" style="
@@ -133,6 +133,10 @@ function renderRegisterPage() {
             <div class="form-group">
               <label>Phone (e.g., +254...)</label>
               <input type="tel" id="reg-phone" class="input-field" placeholder="+254712345678">
+            </div>
+            <div class="form-group">
+              <label>Registration Passcode *</label>
+              <input type="text" id="reg-passcode" class="input-field" placeholder="Enter secret passcode" required>
             </div>
             <div class="form-group">
               <label>Password</label>
@@ -194,14 +198,15 @@ function renderRegisterPage() {
   }
 }
 
-// ===== UPDATED handleRegister (OTP‑bypass aware) =====
+// ===== UPDATED handleRegister (passcode + OTP‑bypass) =====
 async function handleRegister(e) {
   e.preventDefault();
 
   if (!document.getElementById('reg-business').value.trim() ||
       !document.getElementById('reg-name').value.trim() ||
       !document.getElementById('reg-password').value ||
-      !document.getElementById('reg-password2').value) {
+      !document.getElementById('reg-password2').value ||
+      !document.getElementById('reg-passcode').value.trim()) {
     showToast('Please fill in all required fields.', 'error');
     return;
   }
@@ -217,12 +222,13 @@ async function handleRegister(e) {
     phone: document.getElementById('reg-phone').value,
     password: document.getElementById('reg-password').value,
     password2: document.getElementById('reg-password2').value,
+    passcode: document.getElementById('reg-passcode').value.trim(),   // ← NEW
   };
 
   try {
     const res = await registerUser(data);
 
-    // --- OTP BYPASS (when backend returns tokens directly) ---
+    // --- Passcode mode (backend returns tokens directly) ---
     if (res.tokens) {
       localStorage.setItem('access_token', res.tokens.access);
       localStorage.setItem('refresh_token', res.tokens.refresh);
@@ -234,7 +240,7 @@ async function handleRegister(e) {
       return;
     }
 
-    // --- Old OTP flow (fallback) ---
+    // --- Old OTP flow (fallback – should not happen with passcode) ---
     showToast('Registration successful! Please verify OTP.', 'success');
     localStorage.setItem('pendingUserId', res.user_id);
     setTimeout(() => { window.location.hash = '#/otp-verification'; }, 1000);
@@ -242,6 +248,7 @@ async function handleRegister(e) {
     console.log('Full error:', error);
     const errData = error.response?.data;
     if (errData) {
+      // Handle field‑specific errors (including "passcode")
       const messages = [];
       for (const [field, msg] of Object.entries(errData)) {
         messages.push(...(Array.isArray(msg) ? msg : [msg]));

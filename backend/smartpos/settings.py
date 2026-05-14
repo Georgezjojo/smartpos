@@ -212,3 +212,7 @@ X_FRAME_OPTIONS = 'DENY'
 # ====================== OTP BYPASS (Temporary) ======================
 # Set to True to skip email/SMS OTP and activate accounts immediately
 BYPASS_OTP = True
+
+# ====================== REGISTRATION PASSCODE ======================
+# Replace OTP with a hard passcode – users must know this to sign up
+REGISTRATION_PASSCODE = os.environ.get('REGISTRATION_PASSCODE', 'ChangeMeNow!2024')
